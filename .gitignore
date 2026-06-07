@@ -216,3 +216,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Claude
+./claude/
+CLAUDE.md
+STATUS.md
+
+
+
+
+# OpenClaw ランタイム state（sqlite/セッションログ/デバイス認証/自動生成スキル等）は
+# コミットしない。手書きの設定(openclaw.json)とスキル(skills/play2048)だけ追跡する。
+openclaw-demo/state/*
+!openclaw-demo/state/openclaw.json
+!openclaw-demo/state/workspace/
+openclaw-demo/state/workspace/*
+!openclaw-demo/state/workspace/skills/
+openclaw-demo/state/workspace/skills/*
+!openclaw-demo/state/workspace/skills/play2048/
