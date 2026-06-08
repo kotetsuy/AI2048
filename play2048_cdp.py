@@ -59,7 +59,7 @@ VOICEVOX_SPEAKER = int(os.getenv("PLAY2048_SPEAKER_ID", "3"))  # 3=ずんだも�
 NARRATE_WAIT = os.getenv("PLAY2048_NARRATE_WAIT", "1") not in ("0", "false", "False", "")
 NARRATE_WAIT_FACTOR = float(os.getenv("PLAY2048_NARRATE_WAIT_FACTOR", "1.0"))
 NARRATE_MAX_WAIT = float(os.getenv("PLAY2048_NARRATE_MAX_WAIT", "8.0"))  # 暴走防止の上限(秒)
-MOVE_DELAY = 0.4
+MOVE_DELAY = float(os.getenv("PLAY2048_MOVE_DELAY", "0.4"))  # 着手間隔(秒)。env で短縮可
 STOP_AT_2048 = True
 KEY = {0: "ArrowUp", 1: "ArrowRight", 2: "ArrowDown", 3: "ArrowLeft"}
 DIR_JA = {0: "上", 1: "右", 2: "下", 3: "左"}
@@ -248,6 +248,46 @@ def cmd_step(args):
               "empty": st["empty"], "board": st["board"]})
 
 
+def cmd_steps(args):
+    """最速モード: 1回の CDP セッションで最大 count 手を一気に着手し、結果サマリを返す。
+    エージェントの LLM 往復を手ごとに発生させず、数手まとめて進めて実況を間引くための主役。
+    途中で won/over/stuck/wait になったらそこまでの結果で止めて返す。"""
+    count = max(1, args.count)
+    delay = args.delay if args.delay is not None else MOVE_DELAY
+    made = 0
+    last_dir = None
+    with game_page() as page:
+        for _ in range(count):
+            st = settle_status(page)
+            if st["over"]:
+                emit({"event": "over", "moves": made,
+                      "score": st["score"], "max_tile": st["max_tile"]})
+                return
+            if st["won"] and STOP_AT_2048:
+                emit({"event": "won", "moves": made,
+                      "score": st["score"], "max_tile": st["max_tile"]})
+                return
+            if st["board"] is None:
+                if made == 0:
+                    emit({"event": "wait", "moves": 0})  # 過渡。再試行。
+                    return
+                break  # ここまでの分を返す
+            d = choose_move(st["board"])
+            if d is None:
+                emit({"event": "stuck", "moves": made,
+                      "score": st["score"], "max_tile": st["max_tile"]})
+                return
+            do_press(page, d)
+            made += 1
+            last_dir = DIR_JA[d]
+            time.sleep(delay)
+        st = settle_status(page)  # バッチ後の最新状態を読み直して返す
+        log(f"{made}手まとめて着手（score {st['score']}, max {st['max_tile']}）")
+        emit({"event": "move", "moves": made, "dir_ja": last_dir,
+              "score": st["score"], "max_tile": st["max_tile"],
+              "empty": st["empty"], "board": st["board"]})
+
+
 def cmd_newgame(args):
     with game_page() as page:
         do_newgame(page)
@@ -357,6 +397,10 @@ def build_parser():
                     help="0=上 1=右 2=下 3=左")
     pr.set_defaults(func=cmd_press)
     sub.add_parser("step", help="read+solve+pressを1回に束ねる").set_defaults(func=cmd_step)
+    sp = sub.add_parser("steps", help="最速: 複数手を一気に着手しサマリを返す（実況間引き用）")
+    sp.add_argument("--count", type=int, default=4, help="まとめて進める手数（既定4）")
+    sp.add_argument("--delay", type=float, default=None, help="着手間隔(秒)。既定はMOVE_DELAY")
+    sp.set_defaults(func=cmd_steps)
     sub.add_parser("newgame", help="新規ゲーム開始").set_defaults(func=cmd_newgame)
     nr = sub.add_parser("narrate", help="実況（three-vrm /speak で VRMずんだもんに喋らせる）")
     nr.add_argument("--text", default=None, help="喋らせるテキスト（省略時は盤面から生成）")

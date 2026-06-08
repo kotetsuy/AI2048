@@ -27,6 +27,9 @@ services:
       PLAY2048_GAME_URL: "http://localhost:8009"
       # Phase 2: 実況は EarthTourGuide の three-vrm /speak（:8000）→ VOICEVOX → VRMずんだもん同居。
       PLAY2048_VRM_URL: "http://localhost:8000"
+      # テンポ: 最速・実況間引きモード。narrate は発話を待たず即返し、着手間隔も短縮。
+      PLAY2048_NARRATE_WAIT: "0"
+      PLAY2048_MOVE_DELAY: "0.2"
       TZ: ${OPENCLAW_TZ:-Asia/Tokyo}
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
@@ -68,6 +71,9 @@ services:
       PLAY2048_GAME_URL: "http://localhost:8009"
       # Phase 2: 実況は EarthTourGuide の three-vrm /speak（:8000）→ VOICEVOX → VRMずんだもん同居。
       PLAY2048_VRM_URL: "http://localhost:8000"
+      # テンポ: 最速・実況間引きモード。narrate は発話を待たず即返し、着手間隔も短縮。
+      PLAY2048_NARRATE_WAIT: "0"
+      PLAY2048_MOVE_DELAY: "0.2"
       TZ: ${OPENCLAW_TZ:-Asia/Tokyo}
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"

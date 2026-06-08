@@ -28,9 +28,10 @@ GW_HEALTH="http://localhost:18789/healthz"
 CDP_HEALTH="http://localhost:9222/json/version"
 VRM_HEALTH="http://localhost:8000/status"
 
-MSG="play2048 スキルの手順で、いまのゲームを step→narrate で最大${MOVES}手すすめて実況してください。\
-step の event が won なら盛大に勝利演出（narrate --speaker 1）、over か stuck なら締めの実況をして、\
-そのあと必ず newgame で次のゲームを始めてください。最後にその回の手数と現在の score / max を一言で報告してください。"
+MSG="play2048 スキルの手順で、いまのゲームを steps（数手まとめ）→narrate（バッチごとに1回だけ）で\
+最大${MOVES}手すすめて実況してください。event が won なら盛大に勝利演出（narrate --speaker 1）、\
+over か stuck なら締めの実況をして、そのあと必ず newgame で次のゲームを始めてください。\
+最後にその回の手数と現在の score / max を一言で報告してください。"
 
 log() { printf '\033[1;36m[demo_loop]\033[0m %s\n' "$*"; }
 
