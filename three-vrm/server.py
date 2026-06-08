@@ -680,6 +680,23 @@ async def status_handler(request: web.Request) -> web.Response:
     })
 
 
+async def stop_demo_handler(request: web.Request) -> web.Response:
+    """連続稼働ループ demo_loop.sh に SIGINT を送る（アバター画面の停止ボタン用）。
+    端末で Ctrl+C を押すのと同じ＝ループの trap INT が走り、現セッション完了後に
+    安全停止する。サービス一式は止めない（それは stop_all.sh の役目）。"""
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "pkill", "-INT", "-f", "demo_loop.sh",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        rc = await proc.wait()
+    except FileNotFoundError:
+        return web.json_response({"ok": False, "error": "pkill not found"}, status=500)
+    # pkill: rc 0=1件以上にシグナル送信, 1=該当プロセスなし。
+    return web.json_response({"ok": True, "signaled": rc == 0})
+
+
 def create_app() -> web.Application:
     app = web.Application()
     app.router.add_get("/ws", ws_handler)
@@ -691,6 +708,7 @@ def create_app() -> web.Application:
     app.router.add_get("/vrm/{filename}", vrm_handler)
     app.router.add_get("/images_list", images_list_handler)
     app.router.add_get("/status", status_handler)
+    app.router.add_post("/stop_demo", stop_demo_handler)  # 停止ボタン: demo_loop.sh に Ctrl+C 相当
     if os.path.isdir(IMAGES_DIR):
         app.router.add_static("/images", IMAGES_DIR)
     app.router.add_static("/", STATIC_DIR, show_index=True)

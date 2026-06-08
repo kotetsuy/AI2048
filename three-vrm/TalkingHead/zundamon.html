@@ -163,6 +163,30 @@
                 border-radius: 4px;
                 pointer-events: none;
             }
+            /* デモ停止ボタン（端末 Ctrl+C と同じ＝demo_loop.sh に SIGINT を送る） */
+            #stop-demo-btn {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                z-index: 20;
+                font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                color: #fff;
+                background: rgba(200, 30, 40, 0.85);
+                border: 2px solid #ff5a6a;
+                border-radius: 8px;
+                padding: 10px 16px;
+                cursor: pointer;
+                user-select: none;
+            }
+            #stop-demo-btn:hover {
+                background: rgba(230, 40, 50, 0.95);
+            }
+            #stop-demo-btn:disabled {
+                opacity: 0.6;
+                cursor: default;
+            }
         </style>
 
         <script type="importmap">
@@ -895,5 +919,39 @@
             </button>
         </div>
         <div id="credit">VOICEVOX:ずんだもん</div>
+        <button id="stop-demo-btn" type="button" title="連続稼働ループを停止（Ctrl+C 相当）">
+            ⏹ デモ停止 (Ctrl+C)
+        </button>
+        <script>
+            // 停止ボタン: server.py の /stop_demo を叩き、demo_loop.sh に SIGINT を送る
+            // （端末で Ctrl+C を押すのと同じ＝現セッション完了後に安全停止）。
+            (function () {
+                const btn = document.getElementById("stop-demo-btn");
+                const LABEL = "⏹ デモ停止 (Ctrl+C)";
+                btn.addEventListener("click", async () => {
+                    if (!confirm("デモを停止しますか？（現セッション完了後に止まります）"))
+                        return;
+                    btn.disabled = true;
+                    btn.textContent = "停止信号 送信中…";
+                    try {
+                        const res = await fetch("/stop_demo", { method: "POST" });
+                        const data = await res.json();
+                        if (data.ok && data.signaled) {
+                            btn.textContent = "✅ 停止要求OK（まもなく停止）";
+                        } else if (data.ok) {
+                            btn.textContent = "ℹ ループ未実行";
+                        } else {
+                            btn.textContent = "⚠ 停止失敗";
+                        }
+                    } catch (e) {
+                        btn.textContent = "⚠ 停止失敗（通信エラー）";
+                    }
+                    setTimeout(() => {
+                        btn.textContent = LABEL;
+                        btn.disabled = false;
+                    }, 4000);
+                });
+            })();
+        </script>
     </body>
 </html>
