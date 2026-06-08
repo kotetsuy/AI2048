@@ -297,7 +297,7 @@ def cmd_narrate(args):
     waited = 0.0
     if not args.no_tts:
         try:
-            result = speak_via_vrm(text)
+            result = speak_via_vrm(text, speaker_id=args.speaker)
             spoken = bool(result.get("ok", True))
             duration = float(result.get("duration_sec", 0.0) or 0.0)
             log(f"[narrate] /speak OK ({duration:.2f}s): {text}")
@@ -362,6 +362,8 @@ def build_parser():
     nr.add_argument("--text", default=None, help="喋らせるテキスト（省略時は盤面から生成）")
     nr.add_argument("--no-tts", action="store_true", help="TTS送信せずテキストのみ（スタブ動作）")
     nr.add_argument("--no-wait", action="store_true", help="音声長ぶんの待機をしない（テンポ同期オフ）")
+    nr.add_argument("--speaker", type=int, default=None,
+                    help="VOICEVOX 話者ID（演出用。既定3=ずんだもんノーマル。1=あまあま/7=ツンツン等）")
     nr.set_defaults(func=cmd_narrate)
     pl = sub.add_parser("play", help="モノリシック自動プレイ（保険）")
     pl.add_argument("--delay", type=float, default=MOVE_DELAY, help="手の間隔(秒)")
