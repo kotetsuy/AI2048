@@ -163,13 +163,13 @@ def is_lost(page):
 
 def on_move(board, direction, score, won=False):
     """実況フック。
-    ここで盤面スクショ→moondream2でコメント生成→llama-server→VOICEVOX(ずんだもん)。
+    ここで盤面スクショ→moondream2でコメント生成→llama-server→VOICEVOX(コテコ/ずんだもん声)。
     現在はコンソール出力のスタブ。
     """
     if won:
-        line = f"やったのだ！2048を作ったのだ！スコアは{score}なのだ！"
+        line = f"やったアル！2048を作ったアルヨ！スコアは{score}あるネ！"
     elif direction is not None:
-        line = f"{DIR_JA[direction]}に動かすのだ（スコア{score}）"
+        line = f"{DIR_JA[direction]}に動かすアルヨ（スコア{score}）"
     else:
         return
     print(line)
