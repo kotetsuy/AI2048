@@ -46,6 +46,12 @@ services_ready() {
 stopping=0
 trap 'stopping=1; log "停止要求を受けました。現在のセッション後に終了します。"' INT TERM
 
+# アバター画面の停止ボタン(/stop_demo)が SIGINT を正確に送れるよう、自分の PID を記録。
+# 終了時(EXIT)に消す。これにより pkill -f の誤マッチ（文字列を含む無関係プロセスへの誤送信）を避ける。
+PIDFILE="${DEMO_PIDFILE:-/tmp/demo_loop.pid}"
+echo $$ > "$PIDFILE"
+trap 'rm -f "$PIDFILE"' EXIT
+
 [[ -f "${COMPOSE_DIR}/docker-compose.yml" ]] || { echo "compose が見つかりません: $COMPOSE_DIR" >&2; exit 1; }
 
 # サービスが揃うまで待つ（start_all.sh 直後など）。

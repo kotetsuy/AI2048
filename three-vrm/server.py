@@ -10,6 +10,7 @@ import io
 import json
 import os
 import re
+import signal
 import uuid
 import wave
 import weakref
@@ -680,21 +681,41 @@ async def status_handler(request: web.Request) -> web.Response:
     })
 
 
+DEMO_PIDFILE = os.environ.get("DEMO_PIDFILE", "/tmp/demo_loop.pid")
+
+
+def _proc_is_demo_loop(pid: int) -> bool:
+    """PID の実体が demo_loop.sh かを /proc/<pid>/cmdline で確認（PID 再利用・古い
+    pidfile による誤送信を防ぐ）。"""
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            cmd = f.read().replace(b"\x00", b" ").decode("utf-8", "replace")
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        return False
+    return "demo_loop.sh" in cmd
+
+
 async def stop_demo_handler(request: web.Request) -> web.Response:
     """連続稼働ループ demo_loop.sh に SIGINT を送る（アバター画面の停止ボタン用）。
     端末で Ctrl+C を押すのと同じ＝ループの trap INT が走り、現セッション完了後に
-    安全停止する。サービス一式は止めない（それは stop_all.sh の役目）。"""
+    安全停止する。サービス一式は止めない（それは stop_all.sh の役目）。
+
+    demo_loop.sh が書く PID ファイルを読み、その PID が実際に demo_loop.sh の場合のみ
+    SIGINT を送る。pkill -f の誤マッチ（文字列を含む無関係プロセスへの誤送信）を避ける。"""
     try:
-        proc = await asyncio.create_subprocess_exec(
-            "pkill", "-INT", "-f", "demo_loop.sh",
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        rc = await proc.wait()
-    except FileNotFoundError:
-        return web.json_response({"ok": False, "error": "pkill not found"}, status=500)
-    # pkill: rc 0=1件以上にシグナル送信, 1=該当プロセスなし。
-    return web.json_response({"ok": True, "signaled": rc == 0})
+        with open(DEMO_PIDFILE) as f:
+            pid = int(f.read().strip())
+    except (FileNotFoundError, ValueError):
+        return web.json_response({"ok": True, "signaled": False})  # ループ未実行
+
+    if not _proc_is_demo_loop(pid):
+        return web.json_response({"ok": True, "signaled": False})  # 古い pidfile 等
+
+    try:
+        os.kill(pid, signal.SIGINT)
+    except (ProcessLookupError, PermissionError) as e:
+        return web.json_response({"ok": True, "signaled": False, "note": str(e)})
+    return web.json_response({"ok": True, "signaled": True})
 
 
 def create_app() -> web.Application:
