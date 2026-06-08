@@ -695,27 +695,57 @@ def _proc_is_demo_loop(pid: int) -> bool:
     return "demo_loop.sh" in cmd
 
 
-async def stop_demo_handler(request: web.Request) -> web.Response:
-    """連続稼働ループ demo_loop.sh に SIGINT を送る（アバター画面の停止ボタン用）。
-    端末で Ctrl+C を押すのと同じ＝ループの trap INT が走り、現セッション完了後に
-    安全停止する。サービス一式は止めない（それは stop_all.sh の役目）。
-
-    demo_loop.sh が書く PID ファイルを読み、その PID が実際に demo_loop.sh の場合のみ
-    SIGINT を送る。pkill -f の誤マッチ（文字列を含む無関係プロセスへの誤送信）を避ける。"""
+async def _signal_loop() -> bool:
+    """demo_loop.sh に SIGINT を送る（PID ファイル経由）。送れたら True。
+    PID ファイルを読み、その PID が実際に demo_loop.sh の場合のみ送る（pkill -f の
+    誤マッチ＝文字列を含む無関係プロセスへの誤送信を避ける）。"""
     try:
         with open(DEMO_PIDFILE) as f:
             pid = int(f.read().strip())
     except (FileNotFoundError, ValueError):
-        return web.json_response({"ok": True, "signaled": False})  # ループ未実行
-
+        return False  # ループ未実行
     if not _proc_is_demo_loop(pid):
-        return web.json_response({"ok": True, "signaled": False})  # 古い pidfile 等
-
+        return False  # 古い pidfile / PID 再利用
     try:
         os.kill(pid, signal.SIGINT)
-    except (ProcessLookupError, PermissionError) as e:
-        return web.json_response({"ok": True, "signaled": False, "note": str(e)})
-    return web.json_response({"ok": True, "signaled": True})
+    except (ProcessLookupError, PermissionError):
+        return False
+    return True
+
+
+async def _stop_agent_sessions() -> int:
+    """進行中の OpenClaw エージェントセッション（compose run の cli-run コンテナ）を
+    止める。停止したコンテナ数を返す。これで「いま喋っている手」も数秒で打ち切れる
+    （即時停止）。gateway コンテナ等は名前フィルタで除外される。"""
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "docker", "ps", "-q", "--filter", "name=openclaw-cli-run",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
+        )
+        out, _ = await proc.communicate()
+    except FileNotFoundError:
+        return 0
+    ids = out.decode().split()
+    if not ids:
+        return 0
+    proc2 = await asyncio.create_subprocess_exec(
+        "docker", "stop", "-t", "3", *ids,
+        stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL,
+    )
+    await proc2.wait()
+    return len(ids)
+
+
+async def stop_demo_handler(request: web.Request) -> web.Response:
+    """連続稼働ループ demo_loop.sh を即時停止する（アバター画面の停止ボタン用）。
+    (1) ループに SIGINT を送り次セッションの開始を止め、(2) 進行中のエージェント
+    セッション(cli-run コンテナ)も止めて、いま喋っている手も数秒で打ち切る。
+    サービス一式は止めない（それは stop_all.sh の役目）。"""
+    signaled = await _signal_loop()
+    stopped = await _stop_agent_sessions()
+    return web.json_response(
+        {"ok": True, "signaled": signaled, "stopped_sessions": stopped}
+    )
 
 
 def create_app() -> web.Application:

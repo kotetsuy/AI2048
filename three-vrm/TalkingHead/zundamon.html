@@ -936,10 +936,10 @@
                     try {
                         const res = await fetch("/stop_demo", { method: "POST" });
                         const data = await res.json();
-                        if (data.ok && data.signaled) {
-                            btn.textContent = "✅ 停止要求OK（まもなく停止）";
+                        if (data.ok && (data.signaled || data.stopped_sessions > 0)) {
+                            btn.textContent = "⏹ 停止しました";
                         } else if (data.ok) {
-                            btn.textContent = "ℹ ループ未実行";
+                            btn.textContent = "ℹ 稼働なし";
                         } else {
                             btn.textContent = "⚠ 停止失敗";
                         }
