@@ -44,6 +44,10 @@
                 font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
                 font-size: 20px;
                 line-height: 1.4;
+                overflow: hidden;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+                word-break: break-word;
                 background: rgba(0, 0, 0, 0.72);
                 padding: 8px 22px;
                 border-radius: 8px;
@@ -135,6 +139,10 @@
                 font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
                 font-size: 16px;
                 line-height: 1.4;
+                overflow: hidden;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 3;
+                word-break: break-word;
                 background: rgba(0, 0, 30, 0.72);
                 padding: 6px 18px;
                 border-radius: 8px;
@@ -656,7 +664,7 @@
                     if (msg.text) {
                         botReplyBuf += msg.text;
                         subtitleEl.textContent = botReplyBuf;
-                        subtitleEl.style.display = "block";
+                        subtitleEl.style.display = "-webkit-box";
                     }
 
                     console.log(
@@ -700,7 +708,7 @@
                     return;
                 }
                 userSubtitleEl.textContent = "🗣 " + text;
-                userSubtitleEl.style.display = "block";
+                userSubtitleEl.style.display = "-webkit-box";
             }
 
             function pickMimeType() {
