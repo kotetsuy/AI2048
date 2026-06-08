@@ -237,6 +237,12 @@ async def _synthesize_and_broadcast(text: str, speaker_id: int) -> dict:
 
     visemes, vtimes, vdurations = mora_to_visemes(query.get("accent_phrases", []))
 
+    # 各発話の前に turn_start を送る。表示ページはこれで字幕バッファ(botReplyBuf)を
+    # リセットし、前発話の再生を止める。これが無いと /speak の text が累積し続け、
+    # 字幕が伸び続ける／3行クランプで先頭だけ残り「更新が止まって見える」不具合になる。
+    # （turn_start/turn_end はストリーム音声チャット専用だったが、単発 /speak にも適用する）
+    await _broadcast({"type": "turn_start", "turn_id": "speak"})
+
     message = json.dumps({
         "type": "speak",
         "audio": base64.b64encode(wav_bytes).decode("ascii"),
