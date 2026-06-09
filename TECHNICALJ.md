@@ -1,5 +1,7 @@
 # TECHNICALJ.md — 技術詳細
 
+> English: [`TECHNICAL.md`](TECHNICAL.md)
+
 2048 × OpenClaw オフライン実況デモの内部設計・実装メモ。
 セットアップ/実行手順は [`READMEJ.md`](READMEJ.md)、OpenClaw 調査結果は [`openclaw_phase1_findings.md`](openclaw_phase1_findings.md)。
 

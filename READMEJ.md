@@ -1,5 +1,7 @@
 # 2048 × OpenClaw オフライン実況デモ
 
+> English: [`README.md`](README.md) / [`TECHNICAL.md`](TECHNICAL.md)
+
 トレードショー向けの **完全オフライン** デモ。ローカルの 2048 を AI が自動プレイし、
 VRM アバター「コテコ」（アルヨ調）が実況する。「AI が画面を見て考えて喋っている」絵で足を止めさせる。
 
