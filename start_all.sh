@@ -150,11 +150,13 @@ if [[ -f "${COMPOSE_DIR}/docker-compose.yml" ]]; then
     log "OpenClaw gateway を起動します"
     ( cd "$COMPOSE_DIR" && docker compose up -d openclaw-gateway ) || warn "gateway 起動に失敗"
     # healthy になるまで待つ（compose の healthcheck）
+    gw_healthy=0
     for i in $(seq 1 30); do
         st="$(cd "$COMPOSE_DIR" && docker compose ps --format '{{.Status}}' openclaw-gateway 2>/dev/null)"
-        echo "$st" | grep -q healthy && { log "  gateway healthy"; break; }
+        echo "$st" | grep -q healthy && { log "  gateway healthy"; gw_healthy=1; break; }
         sleep 1
     done
+    (( gw_healthy )) || warn "gateway が 30s で healthy になりませんでした（status: ${st:-不明}）。デモが回らない場合は docker compose logs を確認"
 else
     warn "openclaw-demo/docker-compose.yml が無いため gateway をスキップ"
 fi

@@ -65,7 +65,7 @@ done
 # 開始時に新規ゲームで仕切り直し（任意）。
 if [[ "$FRESH" == "1" ]]; then
     log "新規ゲームで開始します"
-    compose run --rm -T --entrypoint sh openclaw-cli -c "python3 ${SKILL_CLI} newgame" >/dev/null 2>&1 \
+    compose run --rm -T --entrypoint sh openclaw-cli -c "python3 ${SKILL_CLI} newgame" </dev/null >/dev/null 2>&1 \
         || log "  newgame に失敗（無視して継続）"
 fi
 
@@ -78,13 +78,24 @@ while (( ! stopping )); do
         continue
     fi
     log "セッション #$i（最大 ${MOVES} 手）"
-    if timeout "$SESSION_TIMEOUT" \
+    # timeout --foreground: 子を別プロセスグループに置かない。これがないと端末から
+    #   直接実行したとき docker compose run（-T でも stdin は接続）が制御端末を読んで
+    #   SIGTTIN で停止し、セッション #1 の後ループが進まなくなる（BUG.md Bug #1）。
+    # </dev/null: compose run の stdin を端末から切り離す（防御の重ね掛け）。
+    if timeout --foreground "$SESSION_TIMEOUT" \
          bash -c "cd '$COMPOSE_DIR' && docker compose run --rm -T openclaw-cli \
-           agent --agent main --session-key 'loop$(date +%s)_$i' --message \"\$1\"" _ "$MSG"; then
+           agent --agent main --session-key 'loop$(date +%s)_$i' --message \"\$1\" </dev/null" _ "$MSG"; then
         :
     else
         rc=$?
         log "セッション #$i 失敗/タイムアウト (rc=$rc)。${GAP}s 後に再試行"
+        # タイムアウト時は client(attach) を殺しただけで gateway 側のエージェント実行が
+        # 残りうる。残すと次セッションと盤面操作が混線するので cli-run コンテナを止める
+        # （BUG.md Bug #2。three-vrm server.py の _stop_agent_sessions と同方式）。
+        if (( rc == 124 )); then
+            ids=$(docker ps -q --filter name=openclaw-cli-run)
+            [[ -n "$ids" ]] && { log "  タイムアウト: 進行中の cli-run を停止"; docker stop -t 3 $ids >/dev/null 2>&1 || true; }
+        fi
     fi
     sleep "$GAP"
 done
