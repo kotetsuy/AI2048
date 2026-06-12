@@ -218,10 +218,10 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Claude
-./claude/
+.claude/
 CLAUDE.md
 STATUS.md
-
+BUG.md
 
 
 

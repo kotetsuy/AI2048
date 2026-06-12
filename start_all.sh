@@ -18,7 +18,7 @@ set -uo pipefail
 
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export PULSE_SERVER="${PULSE_SERVER:-unix:${XDG_RUNTIME_DIR}/pulse/native}"
-export DISPLAY="${DISPLAY:-:10.0}"
+export DISPLAY="${DISPLAY:-:0}"
 
 SESSION="ai2048"
 ROOT="/home/$USER/AI2048"

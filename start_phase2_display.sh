@@ -10,9 +10,10 @@
 # このスクリプトは three-vrm 表示ページ専用 Chrome を 1 つ起動する。
 #   - --app モードで zundamon.html を開き、/ws で /speak の実況を受信。
 #   - --autoplay-policy=no-user-gesture-required で AudioContext を自動再生
-#     （kiosk なのでクリックなしで喋れるように）。音声はブラウザ→PipeWire→xrdp-sink。
-#   - 既定で全画面（2048 を背景に取り込むので VRM ウィンドウがデモ全体の絵になる）。
-#     解像度は xrandr から取得。env で上書き可: VRM_X / VRM_Y / VRM_W / VRM_H, DISPLAY, VRM_URL
+#     （クリックなしで喋れるように）。音声はブラウザ→PipeWire→xrdp-sink。
+#   - 既定でウィンドウ表示（全画面ではない）。画面中央に収まるサイズで開く。
+#     env で上書き可: VRM_X / VRM_Y / VRM_W / VRM_H, DISPLAY, VRM_URL
+#     全画面にしたい場合は VRM_FULLSCREEN=1 を指定する。
 #
 # 2048 ウィンドウを左半分に置きたい場合（任意・CDP Chrome を貼り替えるなら）:
 #   google-chrome --remote-debugging-port=9222 --remote-debugging-address=0.0.0.0 \
@@ -44,14 +45,14 @@ if ! curl -sf -o /dev/null "http://localhost:8000/status"; then
   fi
 fi
 
-# 画面サイズ → 既定は全画面（2048 を背景に取り込むので VRM ウィンドウ＝デモ全体の絵）
+# 画面サイズ → 既定はウィンドウ表示（画面の約 75% を中央に配置）
 read SW SH < <(xrandr 2>/dev/null | grep -oP '\d+x\d+(?=\s+\d+\.\d+\*)' | head -1 | tr 'x' ' ')
 SW="${SW:-1024}"; SH="${SH:-768}"
-VRM_W="${VRM_W:-$SW}"
-VRM_H="${VRM_H:-$SH}"
-VRM_X="${VRM_X:-0}"
-VRM_Y="${VRM_Y:-0}"
-echo "画面 ${SW}x${SH} / VRM ウィンドウ pos ${VRM_X},${VRM_Y} size ${VRM_W}x${VRM_H}（全画面）"
+VRM_W="${VRM_W:-$((SW * 3 / 4))}"
+VRM_H="${VRM_H:-$((SH * 3 / 4))}"
+VRM_X="${VRM_X:-$(((SW - VRM_W) / 2))}"
+VRM_Y="${VRM_Y:-$(((SH - VRM_H) / 2))}"
+echo "画面 ${SW}x${SH} / VRM ウィンドウ pos ${VRM_X},${VRM_Y} size ${VRM_W}x${VRM_H}（ウィンドウ）"
 
 # 既存の表示用 Chrome を落としてから起動（多重起動防止）
 pkill -f "$PROFILE" 2>/dev/null || true
@@ -64,12 +65,16 @@ case "$VRM_URL" in
   *)    OPEN_URL="${VRM_URL}?_=$(date +%s)" ;;
 esac
 
+# 全画面にしたい場合のみ VRM_FULLSCREEN=1。既定はウィンドウ表示。
+FULLSCREEN_FLAG=""
+[ "${VRM_FULLSCREEN:-0}" = "1" ] && FULLSCREEN_FLAG="--start-fullscreen"
+
 nohup google-chrome \
   --user-data-dir="$PROFILE" \
   --autoplay-policy=no-user-gesture-required \
   --no-first-run --no-default-browser-check \
   --disk-cache-size=1 --disable-application-cache \
-  --start-fullscreen --window-position="${VRM_X},${VRM_Y}" --window-size="${VRM_W},${VRM_H}" \
+  $FULLSCREEN_FLAG --window-position="${VRM_X},${VRM_Y}" --window-size="${VRM_W},${VRM_H}" \
   --app="$OPEN_URL" >/tmp/chrome-vrm.log 2>&1 &
 disown
 
