@@ -167,9 +167,9 @@ def on_move(board, direction, score, won=False):
     現在はコンソール出力のスタブ。
     """
     if won:
-        line = f"やったアル！2048を作ったアルヨ！スコアは{score}あるネ！"
+        line = f"やったー！2048作れたよ！スコアは{score}だよっ！"
     elif direction is not None:
-        line = f"{DIR_JA[direction]}に動かすアルヨ（スコア{score}）"
+        line = f"{DIR_JA[direction]}に動かすよっ（スコア{score}）"
     else:
         return
     print(line)

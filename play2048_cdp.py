@@ -325,11 +325,11 @@ def cmd_narrate(args):
         with game_page() as page:
             st = game_status(page)
         if st["over"]:
-            text = "ゲームオーバーあるよ……"
+            text = "あ〜、ゲームオーバーだよ……"
         elif st["won"]:
-            text = f"やったアル！2048を作ったアルヨ！スコアは{st['score']}あるネ！"
+            text = f"やったー！2048作れたよ！スコアは{st['score']}だよっ！"
         else:
-            text = f"最大タイルは{st['max_tile']}あるヨ（スコア{st['score']}）"
+            text = f"最大タイルは{st['max_tile']}だよっ（スコア{st['score']}）"
 
     spoken = False
     err = None

@@ -1,6 +1,6 @@
 ---
 name: play2048
-description: 2048を自動プレイし毎手コテコ（アルヨ調）が実況する。AIが盤面を見て考えて指す実況デモ。
+description: 2048を自動プレイし毎手コテコ（元気のいい女の子）が実況する。AIが盤面を見て考えて指す実況デモ。
 user-invocable: true
 metadata: { "openclaw": { "requires": { "bins": ["python3"] }, "os": ["linux"] } }
 ---
@@ -8,7 +8,7 @@ metadata: { "openclaw": { "requires": { "bins": ["python3"] }, "os": ["linux"] }
 # play2048 — 2048 自動プレイ＆実況
 
 ホストの Chrome に表示された 2048 を、expectimax で解きながら自動プレイし、
-1手ごとにコテコのアルヨ調で実況するデモ。手の決定は同梱 Python(expectimax) が行い、
+1手ごとにコテコの元気な女の子口調で実況するデモ。手の決定は同梱 Python(expectimax) が行い、
 あなた（エージェント）は毎ターンの制御ループを回す役。
 
 ツールはすべて同梱 CLI を `exec` で呼ぶ:
@@ -30,16 +30,16 @@ metadata: { "openclaw": { "requires": { "bins": ["python3"] }, "os": ["linux"] }
         - `{"event":"over", ...}` … ゲームオーバー
         - `{"event":"stuck", ...}` … 動かせる手なし
         - `{"event":"wait"}` … 盤面が過渡的に欠落。少し待って steps を再試行。
-   2. そのバッチについて **一言だけ** コテコのアルヨ調実況にして
-      `python3 {baseDir}/play2048_cdp.py narrate --text "<実況>"` を呼ぶ（語尾は「〜アル / 〜アルヨ」）。
-      例: 「ぐいぐい寄せて max{max_tile} まで育てたアルヨ！」（毎手ではなくバッチごとに1回）
+   2. そのバッチについて **一言だけ** コテコの元気な女の子口調の実況にして
+      `python3 {baseDir}/play2048_cdp.py narrate --text "<実況>"` を呼ぶ（語尾は「〜だよ / 〜だね」）。
+      例: 「ぐいぐい寄せて max{max_tile} まで育てたよっ！」（毎手ではなくバッチごとに1回）
 2. **勝敗の演出**（event が won / over / stuck になったら）:
    - **won（2048達成）**: 盛大に勝利実況する。声色も変える＝
-     `narrate --speaker 1 --text "やったアルーっ！ついに2048を作ったアルヨ！すごいアルネ〜！"`
+     `narrate --speaker 1 --text "やったーっ！ついに2048作れたよ！すごいでしょ〜！"`
      （--speaker 1 = あまあま。盤面には 2048 の "You win!" が出るのでそれに合わせる）。
      その後 `python3 {baseDir}/play2048_cdp.py newgame` で次のゲームを始める。
    - **over（ゲームオーバー）/ stuck（手詰まり）**: 締めの実況をする＝
-     `narrate --text "あ〜、ここで終わりアル……でも最大{max_tile}まで育てたアルヨ、惜しいアルネ！"`
+     `narrate --text "あ〜、ここで終わりだよ……でも最大{max_tile}まで育てたよ、惜しかったね！"`
      その後 `newgame` で次のゲームを始める。
 3. **報告**: その回で進めた手数と現在の score / max を一言で報告して終了（次セッションが続きを回す）。
 
