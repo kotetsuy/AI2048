@@ -21,12 +21,12 @@ VRM アバター「コテコ」（元気のいい女の子）が実況する。�
 
 | 項目 | 値 |
 |---|---|
-| マシン | NucBox EVO X2 / Ryzen AI MAX+ 395 / gfx1151 / 48GB unified memory |
+| マシン | NucBox EVO X2 / Ryzen AI MAX+ 395 / gfx1150 / 48GB unified memory |
 | OS | Ubuntu 24.04 |
-| GPU | ROCm 7.2.x（`HSA_OVERRIDE_GFX_VERSION=11.5.1`） |
+| GPU | ROCm 7.2.x（`HSA_OVERRIDE_GFX_VERSION=11.5.0`） |
 | 表示/音声 | xrdp + GNOME Remote Desktop、PipeWire → xrdp-sink |
 
-LLM/VLM は gfx1151（ROCm）、OpenClaw 本体・expectimax・ブラウザ制御は CPU。
+LLM/VLM は gfx1150（ROCm）、OpenClaw 本体・expectimax・ブラウザ制御は CPU。
 
 ---
 
@@ -38,7 +38,7 @@ LLM/VLM は gfx1151（ROCm）、OpenClaw 本体・expectimax・ブラウザ制�
 | 必要物 | 既定パス | 入手方法 |
 |---|---|---|
 | 2048 ゲーム本体 | `~/2048` | `git clone https://github.com/gabrielecirulli/2048` |
-| llama.cpp（ROCm ビルド） | `~/llama.cpp/build/bin/llama-server` | gfx1151 向けに ROCm 対応でビルド（`HSA_OVERRIDE_GFX_VERSION=11.5.1`） |
+| llama.cpp（ROCm ビルド） | `~/llama.cpp/build/bin/llama-server` | gfx1150 向けに ROCm 対応でビルド（`HSA_OVERRIDE_GFX_VERSION=11.5.0`） |
 | Qwen3 モデル | `~/AIassistant/qwen3.6/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf` | GGUF を配置 |
 | VRM アバター | `~/AIassistant/vroid/koteko.vrm` | VRM ファイルを配置 |
 | VOICEVOX | Docker イメージ | `start_all.sh` が自動 pull/起動 |

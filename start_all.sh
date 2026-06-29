@@ -40,11 +40,11 @@ CDP_PORT="9222"
 CDP_PROFILE="/tmp/chrome-cdp-2048"
 COMPOSE_DIR="${ROOT}/openclaw-demo"
 
-# gfx1151 (Ryzen AI Max+ 395) 向け ROCm env（llama 用）。
-export HSA_OVERRIDE_GFX_VERSION="${HSA_OVERRIDE_GFX_VERSION:-11.5.1}"
+# gfx1150 (Ryzen AI Max+ 395) 向け ROCm env（llama 用）。
+export HSA_OVERRIDE_GFX_VERSION="${HSA_OVERRIDE_GFX_VERSION:-11.5.0}"
 export ROCM_PATH="${ROCM_PATH:-/opt/rocm}"
 export HIP_VISIBLE_DEVICES="${HIP_VISIBLE_DEVICES:-0}"
-export AMDGPU_TARGETS="${AMDGPU_TARGETS:-gfx1151}"
+export AMDGPU_TARGETS="${AMDGPU_TARGETS:-gfx1150}"
 export LD_LIBRARY_PATH="/usr/local/lib:/opt/rocm/lib:/opt/rocm/lib/llvm/lib:${LD_LIBRARY_PATH:-}"
 
 # ---- helpers ------------------------------------------------------------

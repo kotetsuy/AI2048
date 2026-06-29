@@ -16,7 +16,7 @@ Setup/run instructions: [`README.md`](README.md). OpenClaw investigation: [`open
 | Move decision | expectimax (pure Python) | inside container, CPU |
 | Browser control | Playwright `connect_over_cdp` | container → host Chrome |
 | Board display | gabrielecirulli/2048 + Chrome (headed) | host |
-| Commentary text shaping | llama-server / Qwen3.6-35B-A3B | host gfx1151 (shared) |
+| Commentary text shaping | llama-server / Qwen3.6-35B-A3B | host gfx1150 (shared) |
 | Speech synthesis | VOICEVOX | host (docker) |
 | Avatar/subtitles/background | three-vrm + zundamon.html (three.js + three-vrm) | host Chrome |
 
@@ -34,7 +34,7 @@ moves (it is weak and slow at it). The LLM only generates commentary text and dr
 5. moondream2 (if used) is for scene description only, never for move decisions.
 6. llama-server is **shared** with AIzunda / EarthTourGuide. It runs with `--parallel 2` or more so that
    conversation and commentary calls are not serialized.
-7. Heavy inference (LLM/VLM) on gfx1151 (ROCm); OpenClaw, expectimax, and browser control on CPU.
+7. Heavy inference (LLM/VLM) on gfx1150 (ROCm); OpenClaw, expectimax, and browser control on CPU.
 8. The base stack is **`~/EarthTourGuide`**. 2048 is on `:8009` (`:8000` is used by three-vrm).
    three-vrm is **vendored (copied)** into `three-vrm/` in this repo; the shared source stays unmodified.
 9. The "picture" approach is **VRM avatar co-located + background compositing**: the 2048 screen is

@@ -134,7 +134,7 @@ Docker サンドボックスは**既定で network なし**。ホスト到達に
 ## Phase 1 の具体構成（上記から確定する形）
 
 ```
-ホスト(gfx1151)
+ホスト(gfx1150)
  ├ 2048 :8009            （python -m http.server, ~/2048。:8000はthree-vrmが使用）
  ├ Chrome :9222 headed   （観客に見せる窓。CDP有効）
  ├ llama-server :8080    （Qwen3, -np2, AIzunda共用）

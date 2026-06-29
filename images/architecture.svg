@@ -9,7 +9,7 @@
 
   <!-- Host box -->
   <rect x="20" y="56" width="560" height="560" rx="10" fill="#ffffff" stroke="#9bb1c9" stroke-width="2"/>
-  <text x="36" y="80" font-size="15" font-weight="bold" fill="#2c5d8f">ホスト (Ubuntu 24.04 / Ryzen AI MAX+ 395 / gfx1151 / ROCm)</text>
+  <text x="36" y="80" font-size="15" font-weight="bold" fill="#2c5d8f">ホスト (Ubuntu 24.04 / Ryzen AI MAX+ 395 / gfx1150 / ROCm)</text>
 
   <!-- 2048 server -->
   <rect x="40" y="100" width="240" height="56" rx="8" fill="#eef6ff" stroke="#3a7bd5"/>

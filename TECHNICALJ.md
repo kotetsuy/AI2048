@@ -17,7 +17,7 @@
 | 手の決定 | expectimax（純 Python） | コンテナ内 CPU |
 | ブラウザ制御 | Playwright `connect_over_cdp` | コンテナ → ホスト Chrome |
 | 盤面表示 | gabrielecirulli/2048 + Chrome(headed) | ホスト |
-| 実況テキスト整形 | llama-server / Qwen3.6-35B-A3B | ホスト gfx1151（共用） |
+| 実況テキスト整形 | llama-server / Qwen3.6-35B-A3B | ホスト gfx1150（共用） |
 | 音声合成 | VOICEVOX | ホスト（docker） |
 | アバター/字幕/背景 | three-vrm + zundamon.html（three.js + three-vrm） | ホスト Chrome |
 
@@ -35,7 +35,7 @@ LLM は実況テキストの生成と制御ループの駆動のみを担う。
 5. moondream2 は（採用する場合）情景描写専用。手の決定には使わない。
 6. llama-server は AIzunda / EarthTourGuide と **共用**。`--parallel 2` 以上で起動し、
    会話と実況呼び出しが直列化しないようにする。
-7. 重い推論（LLM/VLM）は gfx1151（ROCm）。OpenClaw 本体・expectimax・ブラウザ制御は CPU。
+7. 重い推論（LLM/VLM）は gfx1150（ROCm）。OpenClaw 本体・expectimax・ブラウザ制御は CPU。
 8. ベーススタックは **`~/EarthTourGuide`**。2048 は `:8009`（`:8000` は three-vrm が使用）。
    三-vrm はこのリポジトリ配下 `three-vrm/` に **vendoring（コピー）** して使い、共有元は無改変。
 9. 「絵」方式は **VRM アバター同居 + 背景化**。2048 の画面を VRM の `scene.background` に流し、
