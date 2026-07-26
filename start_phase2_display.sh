@@ -26,14 +26,18 @@ VRM_URL="${VRM_URL:-http://localhost:8000/zundamon.html}"
 PROFILE="/tmp/chrome-vrm-2048"
 
 # three-vrm（このリポジトリ同梱版 AI2048/three-vrm）が応答しなければ自動起動する。
+# server.py は aiohttp が要るのでリポジトリ同梱 venv の python を使う
+# （システム python3 は 3.14 で aiohttp 未導入）。
 THREE_VRM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/three-vrm"
+VRM_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.venv/bin/python"
+[ -x "$VRM_PY" ] || VRM_PY=python3
 if ! curl -sf -o /dev/null "http://localhost:8000/status"; then
   if [ ! -f "$THREE_VRM_DIR/server.py" ]; then
     echo "ERROR: $THREE_VRM_DIR/server.py が見つかりません。" >&2
     exit 1
   fi
   echo "three-vrm(:8000) 未起動 → $THREE_VRM_DIR から起動します"
-  ( cd "$THREE_VRM_DIR" && DISPLAY="$DISPLAY" setsid nohup python3 server.py \
+  ( cd "$THREE_VRM_DIR" && DISPLAY="$DISPLAY" setsid nohup "$VRM_PY" server.py \
       >/tmp/three-vrm.log 2>&1 </dev/null & )
   for i in $(seq 1 20); do
     curl -sf -o /dev/null "http://localhost:8000/status" 2>/dev/null && break

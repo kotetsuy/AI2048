@@ -40,8 +40,16 @@ CDP_PORT="9222"
 CDP_PROFILE="/tmp/chrome-cdp-2048"
 COMPOSE_DIR="${ROOT}/openclaw-demo"
 
+# three-vrm(aiohttp) / bgcast(playwright) 用の同梱 venv。
+# Ubuntu 26.04 のシステム python3 は 3.14 で aiohttp/playwright を持たないため、
+# `uv venv --python 3.12 .venv && uv pip install aiohttp playwright` で作る。
+VENV_PY="${ROOT}/.venv/bin/python"
+
 # gfx1151 (Ryzen AI Max+ 395) 向け ROCm env（llama 用）。
-export HSA_OVERRIDE_GFX_VERSION="${HSA_OVERRIDE_GFX_VERSION:-11.5.1}"
+# HSA_OVERRIDE_GFX_VERSION は設定しない。
+# repo.amd.com の gfx1151 wheel も llama.cpp も gfx1151 ネイティブビルドなので
+# override すると壊れる。
+unset HSA_OVERRIDE_GFX_VERSION
 export ROCM_PATH="${ROCM_PATH:-/opt/rocm}"
 export HIP_VISIBLE_DEVICES="${HIP_VISIBLE_DEVICES:-0}"
 export AMDGPU_TARGETS="${AMDGPU_TARGETS:-gfx1151}"
@@ -86,6 +94,8 @@ command -v google-chrome >/dev/null || die "google-chrome がありません"
 [[ -f "$QWEN_MODEL" ]] || die "Qwen モデルが見つかりません: $QWEN_MODEL"
 [[ -d "$GAME_DIR"   ]] || die "2048 ディレクトリがありません: $GAME_DIR"
 [[ -d "${ROOT}/three-vrm" ]] || die "同梱 three-vrm がありません: ${ROOT}/three-vrm"
+[[ -x "$VENV_PY" ]] || die "venv がありません: $VENV_PY
+  作成: cd ${ROOT} && uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python aiohttp playwright"
 
 # ---- 1. 2048 静的サーバ :8009 ------------------------------------------
 if up "http://localhost:${GAME_PORT}/"; then
@@ -113,7 +123,7 @@ fi
 if up "http://localhost:${LLAMA_PORT}/health"; then
     log "llama-server(:${LLAMA_PORT}) は既に稼働（共用llama）"
 else
-    LLAMA_CMD="HSA_OVERRIDE_GFX_VERSION=${HSA_OVERRIDE_GFX_VERSION} ROCM_PATH=${ROCM_PATH} \
+    LLAMA_CMD="ROCM_PATH=${ROCM_PATH} \
 HIP_VISIBLE_DEVICES=${HIP_VISIBLE_DEVICES} AMDGPU_TARGETS=${AMDGPU_TARGETS} \
 LD_LIBRARY_PATH=${LD_LIBRARY_PATH} \
 ${LLAMA_BIN} -m ${QWEN_MODEL} --host 127.0.0.1 --port ${LLAMA_PORT} \
@@ -126,7 +136,7 @@ fi
 if up "http://localhost:8000/status"; then
     log "three-vrm(:8000) は既に稼働"
 else
-    new_window three-vrm "cd ${ROOT}/three-vrm && DISPLAY=${DISPLAY} python3 server.py"
+    new_window three-vrm "cd ${ROOT}/three-vrm && DISPLAY=${DISPLAY} ${VENV_PY} server.py"
     wait_http "three-vrm" "http://localhost:8000/status" 30
 fi
 

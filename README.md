@@ -22,8 +22,8 @@ picture of "an AI looking at the screen, thinking, and talking."
 | Item | Value |
 |---|---|
 | Machine | NucBox EVO X2 / Ryzen AI MAX+ 395 / gfx1151 / 48GB unified memory |
-| OS | Ubuntu 24.04 |
-| GPU | ROCm 7.2.x (`HSA_OVERRIDE_GFX_VERSION=11.5.1`) |
+| OS | Ubuntu 26.04 (resolute) |
+| GPU | ROCm 7.14.0 (`/opt/rocm`, native gfx1151 build — do **not** set `HSA_OVERRIDE_GFX_VERSION`) |
 | Display/audio | xrdp + GNOME Remote Desktop, PipeWire → xrdp-sink |
 
 Heavy inference (LLM/VLM) runs on gfx1151 (ROCm); OpenClaw itself, expectimax, and browser control run on CPU.
@@ -38,7 +38,7 @@ This repo contains the orchestration set (scripts, OpenClaw config, vendored thr
 | Required | Default path | How to obtain |
 |---|---|---|
 | 2048 game itself | `~/2048` | `git clone https://github.com/gabrielecirulli/2048` |
-| llama.cpp (ROCm build) | `~/llama.cpp/build/bin/llama-server` | build with ROCm for gfx1151 (`HSA_OVERRIDE_GFX_VERSION=11.5.1`) |
+| llama.cpp (ROCm build) | `~/llama.cpp/build/bin/llama-server` | build natively for gfx1151 (`cmake -DGGML_HIP=ON -DAMDGPU_TARGETS=gfx1151`) |
 | Qwen3 model | `~/AIassistant/qwen3.6/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf` | place the GGUF |
 | VRM avatar | `~/AIassistant/vroid/koteko.vrm` | place the VRM file |
 | VOICEVOX | Docker image | `start_all.sh` pulls/starts it automatically |
