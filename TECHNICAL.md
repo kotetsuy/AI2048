@@ -230,6 +230,8 @@ the avatar narrating in front (same approach as EarthTourGuide's earth-controlle
 - **Zoom fit**: shrinks the 2048 page to fit the window so the board is not cut off at the bottom (`PLAY2048_BGCAST_ZOOM`, default "fit").
   Re-applied after `do_newgame`'s page.reload via CDP `addScriptToEvaluateOnNewDocument`. Measured zoom ≈ 0.81 at 1024×768.
 - bgcast needs a python with playwright+aiohttp (`.venv` preferred; otherwise it reuses the EarthTourGuide venv).
+  `start_phase2_display.sh` picks the candidate by **checking that `from playwright.async_api import
+  async_playwright; import aiohttp` succeeds**, not by hardcoding a path, so it survives system python changes.
 
 ---
 
@@ -260,7 +262,7 @@ the avatar narrating in front (same approach as EarthTourGuide's earth-controlle
 | `phase0_cdp_test.py` / `start_phase0.sh` | Phase 0 verification (old; normally use start_all.sh) |
 | `openclaw-demo/` | the OpenClaw container set (Dockerfile / compose / openclaw.json / skill) |
 | `three-vrm/` | the VRM display server (vendored from EarthTourGuide; `/speak` / `/bg` / `/stop_demo`) |
-| `.venv/` | the venv for bgcast (playwright + aiohttp) |
+| `.venv/` | the bundled venv (aiohttp for three-vrm, playwright for bgcast); created with `uv venv --python 3.12` |
 
 External clones (under HOME): `~/2048` (the game), `~/openclaw` (the official repo, for reference).
 
@@ -271,6 +273,15 @@ External clones (under HOME): `~/2048` (the game), `~/openclaw` (the official re
 - Reusing session `main` causes `Cannot continue from message role: assistant` → pass a unique `--session-key` each time.
 - Truncating the log with `: >` while llama is running breaks prompt-eval measurement → start a fresh log when measuring.
 - bgcast is skipped if `.venv` lacks playwright+aiohttp (warning in `/tmp/bgcast.log`).
+- **Never hardcode `python3` in host-side scripts.** Ubuntu 26.04's system python is 3.14 and has neither
+  aiohttp nor playwright, so three-vrm dies with `ModuleNotFoundError: No module named 'aiohttp'`.
+  `start_all.sh` / `start_phase2_display.sh` launch it with the bundled venv (`.venv/bin/python`).
+  The OpenClaw side (the skill's `python3 play2048_cdp.py`) runs the container's python and is unaffected
+  by host OS upgrades.
+- **Create `.venv` with `uv venv --python 3.12`.** `python3 -m venv` links against the system python, so
+  `.venv/bin/python` becomes a dangling symlink once an OS upgrade removes that interpreter.
+- **Do not set `HSA_OVERRIDE_GFX_VERSION`** (gfx1151 + ROCm 7.14). llama.cpp is a native gfx1151 build, so
+  overriding the arch breaks it. `start_all.sh` `unset`s it in case a shell profile still exports it.
 - Chrome must be started headed with the dedicated profile `/tmp/chrome-cdp-2048`. Remove `SingletonLock` first.
 - Normal mode (with a narrate wait per move) is not suited to 1000 consecutive moves (it's a "show" tempo for the demo); fast mode addresses this by thinning.
 

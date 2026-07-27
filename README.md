@@ -43,7 +43,8 @@ This repo contains the orchestration set (scripts, OpenClaw config, vendored thr
 | VRM avatar | `~/AIassistant/vroid/koteko.vrm` | place the VRM file |
 | VOICEVOX | Docker image | `start_all.sh` pulls/starts it automatically |
 
-Required commands: `docker` (+ compose v2), `tmux`, `curl`, `google-chrome`, `python3`, `xrandr`.
+Required commands: `docker` (+ compose v2), `tmux`, `curl`, `google-chrome`, `python3`, `xrandr`,
+`uv` (to create the bundled venv; see §3).
 
 ---
 
@@ -58,9 +59,12 @@ cd AI2048
 # 2) Get the 2048 game (the offline serving source)
 git clone https://github.com/gabrielecirulli/2048 ~/2048
 
-# 3) Create the venv for the background cast (bgcast): playwright + aiohttp. No Chromium binary needed.
-python3 -m venv .venv
-./.venv/bin/pip install playwright aiohttp
+# 3) Create the bundled venv (aiohttp for three-vrm, playwright for the background cast)
+#    Ubuntu 26.04's system python3 is 3.14 and has neither aiohttp nor playwright, so
+#    provision 3.12 with uv (`python3 -m venv` ties the venv to the system python and
+#    breaks when the OS upgrade removes that interpreter).
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python aiohttp playwright
 #   Note: connect_over_cdp uses the host Chrome, so `playwright install` is not needed.
 
 # 4) Prepare the Compose .env (contains paths and a token; .env is NOT in the repo)
@@ -177,6 +181,14 @@ in a shared environment.
   connected to `/ws`. Re-run `start_phase2_display.sh`. Check `/tmp/chrome-vrm.log`.
 - **2048 does not appear in the background**: no `/bg_ingest connected` in `/tmp/bgcast.log` → bgcast not
   started. Check that `.venv` has playwright+aiohttp. You can disable it with `NO_BGCAST=1`.
+- **three-vrm dies with `ModuleNotFoundError: No module named 'aiohttp'`**: it was started with the system
+  python3 (3.14 on 26.04). `start_all.sh` / `start_phase2_display.sh` must use the bundled venv
+  (`.venv/bin/python`).
+- **`.venv/bin/python` does not run / dangling symlink**: the OS upgrade removed the interpreter the venv
+  pointed at. Recreate it:
+  `uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python aiohttp playwright`.
+- **GPU is not used / HIP errors**: check that `HSA_OVERRIDE_GFX_VERSION` is not exported (it must **not**
+  be set on gfx1151 + ROCm 7.14; `start_all.sh` explicitly `unset`s it).
 - **Agent context overflow**: start llama with `-c 65536 --parallel 2` (per-slot 32768 is required).
 - **Cannot connect to CDP**: Chrome must be started headed with the `/tmp/chrome-cdp-2048` profile.
   Remove `/tmp/chrome-cdp-2048/SingletonLock` before starting.

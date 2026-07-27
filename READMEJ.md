@@ -43,7 +43,8 @@ LLM/VLM は gfx1151（ROCm）、OpenClaw 本体・expectimax・ブラウザ制�
 | VRM アバター | `~/AIassistant/vroid/koteko.vrm` | VRM ファイルを配置 |
 | VOICEVOX | Docker イメージ | `start_all.sh` が自動 pull/起動 |
 
-必須コマンド: `docker`（+ compose v2）, `tmux`, `curl`, `google-chrome`, `python3`, `xrandr`。
+必須コマンド: `docker`（+ compose v2）, `tmux`, `curl`, `google-chrome`, `python3`, `xrandr`,
+`uv`（同梱 venv の作成用。§3 参照）。
 
 ---
 
@@ -58,9 +59,12 @@ cd AI2048
 # 2) 2048 ゲーム本体を取得（オフライン配信元）
 git clone https://github.com/gabrielecirulli/2048 ~/2048
 
-# 3) 背景配信(bgcast)用の venv を作成（playwright + aiohttp。Chromium 本体は不要）
-python3 -m venv .venv
-./.venv/bin/pip install playwright aiohttp
+# 3) 同梱 venv を作成（three-vrm の aiohttp と 背景配信(bgcast) の playwright 用）
+#    Ubuntu 26.04 のシステム python3 は 3.14 で aiohttp/playwright を持たないため、
+#    uv で 3.12 を用意する（`python3 -m venv` だと system python に縛られ、
+#    OS 更新でインタプリタ参照が切れて壊れる）。
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python aiohttp playwright
 #   ※ connect_over_cdp はホストの Chrome を使うので `playwright install` は不要。
 
 # 4) Compose の .env を用意（パスとトークンを含む。.env はリポジトリに含まれない）
@@ -177,6 +181,12 @@ cd ~/AI2048
   `start_phase2_display.sh` を再実行。`/tmp/chrome-vrm.log` を確認。
 - **背景に 2048 が出ない**: `/tmp/bgcast.log` に `/bg_ingest connected` が無い → bgcast 未起動。
   `.venv` に playwright+aiohttp があるか確認。`NO_BGCAST=1` で無効化も可能。
+- **three-vrm が `ModuleNotFoundError: No module named 'aiohttp'` で落ちる**: システム python3（26.04 では 3.14）で
+  起動している。`start_all.sh` / `start_phase2_display.sh` は同梱 venv（`.venv/bin/python`）を使う。
+- **`.venv/bin/python` が動かない / リンク切れ**: OS 更新で venv が指していたインタプリタが消えた。
+  `uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python aiohttp playwright` で作り直す。
+- **GPU が使われない / HIP エラー**: `HSA_OVERRIDE_GFX_VERSION` が export されていないか確認
+  （gfx1151 + ROCm 7.14 では**設定してはいけない**。`start_all.sh` は明示的に `unset` する）。
 - **エージェントが overflow**: llama は `-c 65536 --parallel 2` で起動すること（per-slot 32768 が必要）。
 - **CDP に繋がらない**: Chrome は `/tmp/chrome-cdp-2048` プロファイルで headed 起動が必要。
   起動前に `rm -f /tmp/chrome-cdp-2048/SingletonLock`。

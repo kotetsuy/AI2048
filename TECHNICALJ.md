@@ -230,6 +230,8 @@ gateway.mode: "local"             // 無いと起動ブロック
 - **ズーム fit**: 2048 ページを縮小してウィンドウに収め盤面の下切れを防ぐ（`PLAY2048_BGCAST_ZOOM`、既定 "fit"）。
   `do_newgame` の page.reload 後も効くよう CDP `addScriptToEvaluateOnNewDocument` で再適用。実測 1024×768 で zoom≈0.81。
 - bgcast 実行には playwright+aiohttp のある python が必要（`.venv` 優先、無ければ EarthTourGuide の venv を流用）。
+  `start_phase2_display.sh` はパス決め打ちではなく **`from playwright.async_api import async_playwright; import aiohttp`
+  が通るか**で候補を選ぶので、system python のバージョンが変わっても壊れにくい。
 
 ---
 
@@ -260,7 +262,7 @@ gateway.mode: "local"             // 無いと起動ブロック
 | `phase0_cdp_test.py` / `start_phase0.sh` | Phase0 検証（旧。通常は start_all.sh を使う） |
 | `openclaw-demo/` | OpenClaw コンテナ一式（Dockerfile / compose / openclaw.json / skill） |
 | `three-vrm/` | VRM 表示サーバ（EarthTourGuide から vendoring。`/speak` / `/bg` / `/stop_demo`） |
-| `.venv/` | bgcast 実行用 venv（playwright + aiohttp） |
+| `.venv/` | 同梱 venv（three-vrm の aiohttp / bgcast の playwright）。`uv venv --python 3.12` で作る |
 
 外部 clone（HOME 配下）: `~/2048`（ゲーム本体）, `~/openclaw`（公式リポジトリ・構成参照用）。
 
@@ -271,6 +273,14 @@ gateway.mode: "local"             // 無いと起動ブロック
 - セッション `main` を使い回すと `Cannot continue from message role: assistant` → 毎回ユニークな `--session-key`。
 - llama 起動中にログを `: >` で truncate すると prompt eval 計測が壊れる → 計測時は別ログで新規起動。
 - bgcast は `.venv` に playwright+aiohttp が無いとスキップされる（`/tmp/bgcast.log` に警告）。
+- **ホスト側スクリプトで `python3` をベタ書きしない**。Ubuntu 26.04 の system python は 3.14 で
+  aiohttp/playwright を持たないため、three-vrm が `ModuleNotFoundError: No module named 'aiohttp'` で落ちる。
+  `start_all.sh` / `start_phase2_display.sh` は同梱 venv（`.venv/bin/python`）で起動する。
+  なお OpenClaw 側（スキルの `python3 play2048_cdp.py`）はコンテナ内の python なのでホスト OS 更新の影響を受けない。
+- **`.venv` は `uv venv --python 3.12` で作る**。`python3 -m venv` だと system python にリンクするため、
+  OS 更新でインタプリタが消えると `.venv/bin/python` がリンク切れになる。
+- **`HSA_OVERRIDE_GFX_VERSION` は設定しない**（gfx1151 + ROCm 7.14）。llama.cpp も gfx1151 ネイティブ
+  ビルドなので override すると壊れる。shell profile に残っている場合に備え `start_all.sh` は `unset` する。
 - Chrome は専用プロファイル `/tmp/chrome-cdp-2048` で headed 起動が必要。起動前に `SingletonLock` を削除。
 - 1 手あたり narrate 待ちが入る通常モードは連続 1000 手には不向き（デモ向けの「見せる」テンポ）。最速モードは間引きで対応。
 
